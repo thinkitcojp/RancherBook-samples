@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-todoserver-{{ .Release.Name }}
+  labels:
+    app: todoserver-{{ .Release.Name }}
+spec:
+  replicas: {{ .Values.todo.server.replicas }}
+  selector:
+    matchLabels:
+      app: todoserver-{{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: todoserver-{{ .Release.Name }}
+    spec:
+      containers:
+      - name: todoserver
+        image: {{ .Values.todo.server.image }}:{{ .Values.todo.server.tag }}
+        envFrom:
+        - configMapRef:
+            name: configmap-todoserver
+        - secretRef:
+            name: secret-todoserver-app
+      initContainers:
+      - name: mysql-ping
+        image: mysql:5.7
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            i=1
+            while [ $i -lt 6 ]; do
+              mysqladmin ping -h ${MYSQL_HOST} -u${MYSQL_USER} -p${MYSQL_PASSWORD}
+              ret=$?
+              echo $ret
+              if [ $ret -eq 0 ]; then
+                echo "MySQL is running"
+                exit 0
+              fi
+              echo "MySQL is preparing now. Wait 10 sec."
+              sleep 10
+              i=`expr $i + 1`
+            done
+        envFrom:
+        - configMapRef:
+            name: configmap-todoserver
+        - secretRef:
+            name: secret-todoserver-app
+      - name: todoserver-migration
+        image: {{ .Values.todo.server.image }}:{{ .Values.todo.server.tag }}
+        command:
+          - /bin/sh
+          - -c
+        args:
+          - |
+            python manage.py migrate
+        envFrom:
+        - configMapRef:
+            name: configmap-todoserver
+        - secretRef:
+            name: secret-todoserver-app
+
+      imagePullSecrets:
+        - name: secret-todoserver-{{ .Release.Name }}

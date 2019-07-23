@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-todoserver-{{ .Release.Name }}
+  labels:
+    app: todoserver-{{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app: todoserver-{{ .Release.Name }}
+  ports:
+  - name: http
+    port: 8000
+    protocol: TCP
+    targetPort: 8000

@@ -1,0 +1,4 @@
+protocol: "https"
+host: "example.com"
+port: 1000
+token: "test_token"

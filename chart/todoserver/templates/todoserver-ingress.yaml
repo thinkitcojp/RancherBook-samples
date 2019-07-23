@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-todoserver-{{ .Release.Name }}
+  labels:
+    app: todoserver-{{ .Release.Name }}
+spec:
+  rules:
+  - host: {{ .Values.host }}.{{ .Values.domain }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: service-todoserver-{{ .Release.Name }}
+          servicePort: 8000

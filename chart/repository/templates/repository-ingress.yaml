@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-repository
+  labels:
+    app: repository
+spec:
+  rules:
+  - host: {{ .Values.repository.host }} 
+    # host: repository.web.ryoma0923.work
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: service-repository
+          servicePort: 80

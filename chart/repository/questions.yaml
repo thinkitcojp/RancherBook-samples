@@ -1,0 +1,41 @@
+questions:
+# イメージレジストリおよびその認証情報
+- variable: imageCredentials.registry
+  type: string
+  label: "Image Registry domain"
+  group: "Registry Information"
+  description: "Image registry domain"
+  default: registry.gitlab.com
+- variable: imageCredentials.username
+  type: string
+  label: "Registry user name"
+  group: "Registry Information"
+  description: "Registry user name"
+  default: registry_user
+- variable: imageCredentials.password
+  type: password
+  label: "Registry user password"
+  group: "Registry Information"
+  description: "Registry user password"
+# repositoryチャート本体の設定項目
+## 外部公開用のFQDN情報
+- variable: repository.host
+  type: string
+  label: "FQDN"
+  group: "Domain information"
+  description: "FQDN"
+## チャート本体の情報
+### イメージリポジトリの指定
+- variable: repository.image
+  type: string
+  label: "Custom chart repository image"
+  group: "Repository chart information"
+  description: "Repository URI for custom chart repository image"
+  default: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/repository 
+### イメージタグの指定
+- variable: repository.tag
+  type: string
+  label: "Custom chart repository image tag"
+  group: "Repository chart information"
+  description: "Tag information for custom chart repository image"
+  default: latest

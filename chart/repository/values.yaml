@@ -1,0 +1,20 @@
+credentials: '{
+        "auths": {
+                "registry.gitlab.com": {
+                        "auth": "ZnVmdWh1OjJ1SmlXYUlEaWkj"
+                }
+        },
+        "HttpHeaders": {
+                "User-Agent": "Docker-Client/18.09.2 (linux)"
+        }
+}'
+
+repository:
+  host: repository.web.ryoma0923.work
+  image: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/repository
+  tag: latest
+
+imageCredentials:
+  registry: registry.gitlab.com
+  username: registry_user
+  password: nQGb5sxxWmuWswRjL1_x

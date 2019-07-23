@@ -1,0 +1,55 @@
+questions:
+- variable: imageCredentials.registry
+  type: string
+  label: "Image Registry domain"
+  group: "Registry Information"
+  description: "Image registry domain"
+  default: registry.gitlab.com
+- variable: imageCredentials.username
+  type: string
+  label: "Registry user name"
+  group: "Registry Information"
+  description: "Registry user name"
+  default: registry_user
+- variable: imageCredentials.password
+  type: password
+  label: "Registry user password"
+  group: "Registry Information"
+  description: "Registry user password"
+- variable: host
+  type: string
+  label: "Domain host"
+  group: "Domain information"
+  description: "Host part of FQDN"
+- variable: domain
+  type: string
+  label: "Domain"
+  group: "Domain information"
+  description: "Domain part of FQDN"
+- variable: todo.server.image
+  type: string
+  label: "Todo server image repository"
+  group: "Todo server image information"
+  default: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server
+- variable: todo.server.tag
+  type: string
+  label: "Todo server image tag"
+  group: "Todo server image information"
+  default: latest
+- variable: todo.server.replicas
+  type: int
+  label: "Todo server image replica number"
+  group: "Todo server image information"
+  default: 1
+- variable: mysql.mysqlUser
+  type: string
+  label: "MySQL Username"
+  group: "MySQL information"
+- variable: mysql.mysqlPassword
+  type: password
+  label: "MySQL User Password"
+  group: "MySQL information"
+- variable: mysql.mysqlDatabase
+  type: string
+  label: "MySQL Database"
+  group: "MySQL information"

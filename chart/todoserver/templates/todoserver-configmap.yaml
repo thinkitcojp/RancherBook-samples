@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap-todoserver
+data:
+  MYSQL_HOST: {{ .Values.mysql.mysqlHost }}
+  MYSQL_USER: {{ .Values.mysql.mysqlUser }}
+  MYSQL_DATABASE: {{ .Values.mysql.mysqlDatabase }}
+  MYSQL_HOST: {{ .Release.Name }}-mysql
+  TODO_SERVER_ENVIRONMENT: {{ .Values.todo.environment }}
+  DJANGO_SETTINGS_MODULE: {{ .Values.todo.django.settings }}

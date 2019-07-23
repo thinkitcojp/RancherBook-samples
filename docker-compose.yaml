@@ -1,0 +1,62 @@
+version: '3.4'
+services:
+  todo-client:
+    build:
+      context: client/gopath/src
+      target: builder
+    environment:
+      TODO_TESTSERVER: todo-server
+    command:
+      - /bin/bash
+      - -e
+      - -c
+      - |
+        # todo-serverの起動待ち
+        sleep 20
+        # テストの実行
+        go test -v ./...
+        echo $TODO_TESTSERVER
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからpingサブコマンドを実行します。"
+        ./todo ping --host todo-server --protocol http --port 8000
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからloginサブコマンドを実行します。"
+        ./todo login --username test_user --password test_password --host todo-server --protocol http --port 8000
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからcreateサブコマンドを実行します。"
+        ./todo create --title "todo" --description "todo-description"
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからgetサブコマンドを実行します。(全タスク取得)"
+        ./todo get
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからgetサブコマンドを実行します。(単一タスク取得)"
+        ./todo get --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'`
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからdeleteサブコマンドを実行します。"
+        ./todo delete --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'`
+        echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからupdateサブコマンドを実行します。"
+        ./todo update --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'` --title "updated" --description "updated description" --status "RUNNING"
+        
+
+
+  todo-server:
+    build:
+      context: server/
+    environment:
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: sampleapp
+      MYSQL_HOST: todo-mysql
+    command:
+      - /bin/sh
+      - -e
+      - -c
+      - |
+        sleep 5
+        python manage.py migrate
+        python manage.py loaddata sampleapp/fixtures/test_user
+        python manage.py loaddata task_status #追加
+        gunicorn -w 2 -b 0.0.0.0:8000 sampleapp.wsgi
+  todo-mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_DATABASE: sampleapp
+    expose:
+      - 3306

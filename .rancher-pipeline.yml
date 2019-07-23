@@ -1,0 +1,24 @@
+stages:
+- name: Build
+  steps:
+  - runScriptConfig:
+      image: alpine/helm:2.14.0
+      shellScript: |-
+        #! /bin/sh
+        cd chart/todoserver
+        helm template . --name cd --set host=cd --set todo.server.tag=${CICD_EXECUTION_SEQUENCE}  > ./rendered.yaml
+    when:
+      event:
+        include:
+        - tag
+  - publishImageConfig:
+      dockerfilePath: ./server/Dockerfile
+      buildContext: ./server
+      tag: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server:${CICD_EXECUTION_SEQUENCE}
+      pushRemote: true
+      registry: registry.gitlab.com
+- name: Apply Rendered
+  steps:
+  - applyYamlConfig:
+      path: ./chart/todoserver/rendered.yaml
+timeout: 60

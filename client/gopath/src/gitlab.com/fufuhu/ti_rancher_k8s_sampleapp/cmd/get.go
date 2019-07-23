@@ -1,0 +1,96 @@
+// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package cmd
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/spf13/cobra"
+	"gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/service"
+)
+
+// getCmd represents the get command
+var getCmd = &cobra.Command{
+	Use:   "get",
+	Short: "ユーザに紐づくTODOタスクを取得します。",
+	Long: `ユーザに紐づくTODOタスクを取得します。
+		--id指定なしの場合は、当該ユーザに紐づく全ての
+		TODOタスクを取得します。`,
+	Run: get,
+}
+
+func init() {
+	rootCmd.AddCommand(getCmd)
+
+	// Here you will define your flags and configuration settings.
+
+	// Cobra supports Persistent Flags which will work for this command
+	// and all subcommands, e.g.:
+	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	// Cobra supports local flags which will only run when this command
+	// is called directly, e.g.:
+	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	getCmd.Flags().Int("id", 0, "タスクのID")
+}
+
+func get(cmd *cobra.Command, args []string) {
+
+	protocol, err := clientSetting.Protocol()
+	if err != nil {
+		log.Fatal(err)
+	}
+	host, err := clientSetting.Host()
+	if err != nil {
+		log.Fatal(err)
+	}
+	port, err := clientSetting.Port()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	token, err := clientSetting.Token()
+	if err != nil {
+		log.Println("JWTトークンの設定が異常です。loginサブコマンドで再取得してください。")
+		log.Fatal(err)
+	}
+
+	// IDの値が取れなくても0が入るだけなのでerrorは無視する。
+	id, _ := taskRequestSetting.ID()
+
+	if id != 0 {
+		tasks, err := service.GetTask(protocol, host, port, token, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("ID\tTitle\tStatus\tDescription\n")
+		for _, v := range tasks {
+			fmt.Printf("%d\t%s\t%s\t%s\n", v.ID, v.Title, v.Status, v.Description)
+		}
+	} else {
+		tasks, err := service.GetTasks(protocol, host, port, token)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("ID\tTitle\tStatus\tDescription\n")
+		for _, v := range tasks {
+			fmt.Printf("%d\t%s\t%s\t%s\n", v.ID, v.Title, v.Status, v.Description)
+		}
+	}
+
+}

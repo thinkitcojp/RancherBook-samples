@@ -1,0 +1,110 @@
+stages:
+  - build
+  - test
+
+todoserver_image_build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker build -t registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server:${CI_COMMIT_SHA} server
+    - docker push registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server:${CI_COMMIT_SHA}
+  tags:
+    - docker
+
+todoclient_image_build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker build --target builder -t registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/client-builder:${CI_COMMIT_SHA} client/gopath/src
+    - docker push registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/client-builder:${CI_COMMIT_SHA}
+  tags:
+    - docker
+
+repository_image_build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker build -t registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/repository:${CI_COMMIT_SHA} chart
+    - docker push registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/repository:${CI_COMMIT_SHA}
+  tags: 
+    - docker
+
+todoserver_test:
+  stage: test
+  services:
+    - name: mysql:5.7
+      alias: todo-mysql
+      command:
+        - mysqld 
+        - --character-set-server=utf8 
+        - --collation-server=utf8_unicode_ci
+
+  variables:
+    # MySQL関連の設定
+    MYSQL_USER: test #ユーザ
+    MYSQL_PASSWORD: test #ユーザパスワード
+    MYSQL_ROOT_PASSWORD: test  #MySQLのrootパスワード
+    MYSQL_DATABASE: test #データベース名
+    MYSQL_HOST: todo-mysql #データベースホスト名
+    # 動作環境設定
+    TODO_SERVER_ENVIRONMENT: production
+    # 利用するDjangoの設定ファイル
+    DJANGO_SETTINGS_MODULE: sampleapp.settings_mysql
+
+  image: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server:${CI_COMMIT_SHA}
+  script:
+    - |
+      cd server/sampleapp
+      python manage.py test -v 2  --noinput
+
+todoclient_test:
+  stage: test
+  services: 
+    - name: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/server:${CI_COMMIT_SHA}
+      alias: todo-server
+      command:
+        - /bin/sh
+        - -e
+        - -c
+        - |
+          python manage.py migrate
+          python manage.py loaddata sampleapp/fixtures/test_user
+          python manage.py loaddata task_status
+          gunicorn -w 2 -b 0.0.0.0:8000 sampleapp.wsgi
+
+
+  image: registry.gitlab.com/fufuhu/ti_rancher_k8s_sampleapp/todo/client-builder:${CI_COMMIT_SHA}
+  variables:
+    TODO_TESTSERVER: "todo-server"
+    TODO_SERVER_ENVIRONMENT: "ci"
+    DJANGO_SETTINGS_MODULE: "sampleapp.settings" #ローカルのSQLiteを使うように指定
+  script:
+    - |
+      go test -v ./...
+      cd /go/src/gitlab.com/fufuhu/ti_rancher_k8s_sampleapp
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからpingサブコマンドを実行します。"
+      ./todo ping --host todo-server --protocol http --port 8000
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからloginサブコマンドを実行します。"
+      ./todo login --username test_user --password test_password --host todo-server --protocol http --port 8000
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからcreateサブコマンドを実行します。"
+      ./todo create --title "todo" --description "todo-description"
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからgetサブコマンドを実行します。(全タスク取得)"
+      ./todo get
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからgetサブコマンドを実行します。(単一タスク取得)"
+      ./todo get --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'`
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからdeleteサブコマンドを実行します。"
+      ./todo delete --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'`
+      echo `date +"%Y/%m/%d %H:%M:%S"`" 生成したバイナリからupdateサブコマンドを実行します。"
+      ./todo update --id `./todo create --title "todoGet" --description "Get"| grep "ID" | sed -e 's/ID: //'` --title "updated" --description "updated description" --status "RUNNING"

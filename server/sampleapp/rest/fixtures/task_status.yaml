@@ -1,0 +1,16 @@
+- model: rest.TaskStatus
+  pk: 1
+  fields:
+    name: TODO
+- model: rest.TaskStatus
+  pk: 2
+  fields:
+    name: RUNNING
+- model: rest.TaskStatus
+  pk: 3
+  fields:
+    name: FINISHED
+- model: rest.TaskStatus
+  pk: 4
+  fields:
+    name: PENDING
