@@ -1,4 +1,3 @@
-sample/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -142,3 +141,5 @@ client/gopath/pkg
 client/gopath/src/github.com
 client/gopath/src/golang.org
 client/gopath/src/gopkg.in
+
+.DS_Store
