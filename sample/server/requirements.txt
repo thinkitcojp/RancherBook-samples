@@ -4,5 +4,5 @@ Markdown==3.0.1
 gunicorn==19.9.0
 #pylint==2.2.2
 djangorestframework-jwt==1.11.0
-PyYAML==3.13
+PyYAML==5.4
 PyMySQL==0.9.3
